@@ -13,6 +13,8 @@ import 'dart:io' as io;
 import 'package:connectivity/connectivity.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:async';
 
 bool debugShowCheckedModeBanner = true;
 
@@ -32,7 +34,40 @@ class _HomeState extends State<Home> {
   Map<String, dynamic> empty_for_Mute = {};
   _HomeState(this.jsonFileFace, this.jsonFileSos);
 
+  //Integration code start
+
+  String data;
+
+  //integration code end
+
   var internet = false;
+  void getdata() async {
+    try {
+      var url = 'http://192.168.43.116/';
+
+      Timer.periodic(Duration(seconds: 1), (timer) async {
+        var response = await http.get(url);
+        if (response.statusCode == 200) {
+          data = response.body;
+          print(data);
+          // print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" + data);
+          // sensor = data.split(",");
+          // sensor1 = int.parse(sensor[0]);
+          // sensor2 = int.parse(sensor[1]);
+          // sensor3 = int.parse(sensor[2]);
+          // print("sensor1:" + sensor1.toString());
+          // print("sensor2:" + sensor2.toString());
+          // print("sensor3:" + sensor3.toString());
+        } else {
+          data = 'Request failed with status: ${response.statusCode}.';
+          print('Request failed with status: ${response.statusCode}.');
+        }
+        // setState(() {});
+      });
+    } catch (e) {
+      print("Exception found:" + e.toString());
+    }
+  }
 
   final TextToSpeech tts = new TextToSpeech();
   final SpeechToText speech = SpeechToText();
