@@ -288,22 +288,22 @@ class _SaveFacesState extends State<SaveFaces> {
                           if (_textController.text.isNotEmpty)
                             tts.promptInput(_textController.text);
                         },
-                        child: new TextField(
-                          controller: _textController,
-                          style: new TextStyle(
-                              fontSize: 25.0,
-                              color: const Color(0xFF000000),
-                              fontWeight: FontWeight.w600,
-                              fontFamily: "Roboto"),
-                          keyboardType: TextInputType.name,
-                          onTap: () {
-                            if (_textController.text.isEmpty)
-                              tts.promptInput("Enter Name");
-                          },
-                          onChanged: (value) {
-                            tts.inputPlayback(value);
-                          },
-                        ),
+                        // child: new TextField(
+                        //   controller: _textController,
+                        //   style: new TextStyle(
+                        //       fontSize: 25.0,
+                        //       color: const Color(0xFF000000),
+                        //       fontWeight: FontWeight.w600,
+                        //       fontFamily: "Roboto"),
+                        //   keyboardType: TextInputType.name,
+                        //   onTap: () {
+                        //     if (_textController.text.isEmpty)
+                        //       tts.promptInput("Enter Name");
+                        //   },
+                        //   onChanged: (value) {
+                        //     tts.inputPlayback(value);
+                        //   },
+                        // ),
                       ),
                       SizedBox(
                         height: SizeConfig.safeBlockVertical * 2,

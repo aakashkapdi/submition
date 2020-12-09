@@ -131,6 +131,7 @@ class TextToSpeech {
   }
 
   void tell(String content) async {
+    tts.stop();
     setTts();
     await tts.speak(content);
   }

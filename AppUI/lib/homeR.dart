@@ -13,6 +13,7 @@ import 'dart:io' as io;
 import 'package:connectivity/connectivity.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
 
 bool debugShowCheckedModeBanner = true;
 
@@ -196,11 +197,56 @@ class _HomeState extends State<Home> {
     }
   }
 
+  /* Integration code*/
+  Timer timer;
+  String data;
+  List output;
+
+  String dummy_data = "";
+
+  void getData() async {
+    try {
+      var url = 'http://192.168.43.116/';
+
+      timer = Timer.periodic(Duration(seconds: 3), (t_imer) async {
+        var response = await http.get(url);
+        if (response.statusCode == 200) {
+          data = response.body;
+          output = data.split(",");
+          tts.tell(output[0]);
+          dummy_data = "hello,hi,bye,how,are,you,rishi";
+          //setState(() {});
+          print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" + data);
+          // sensor = data.split(",");
+          // sensor1 = int.parse(sensor[0]);
+          // sensor2 = int.parse(sensor[1]);
+          // sensor3 = int.parse(sensor[2]);
+          // print("sensor1:" + sensor1.toString());
+          // print("sensor2:" + sensor2.toString());
+          // print("sensor3:" + sensor3.toString());
+        } else {
+          data = 'Request failed with status: ${response.statusCode}.';
+          print('Request failed with status: ${response.statusCode}.');
+        }
+        // setState(() {});
+      });
+    } catch (e) {
+      print("Exception found:" + e.toString());
+    }
+  }
+
+  @override
+  void dispose() {
+    timer.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     checkFileFace();
     checkFileSos();
     checkFileMute();
+    getData();
     SizeConfig().init(context);
     tts.tellCurrentScreen("Home");
     SystemChrome.setPreferredOrientations([
@@ -248,6 +294,7 @@ class _HomeState extends State<Home> {
                             child: new RaisedButton(
                                 key: null,
                                 onPressed: () {
+                                  timer.cancel();
                                   tts.tellPress("SEND  S O S");
                                   _startTimer();
                                   if (goOrNot(0)) {
@@ -256,7 +303,7 @@ class _HomeState extends State<Home> {
                                 },
                                 color: const Color(0xFF266EC0),
                                 child: new Text(
-                                  "SEND SOS",
+                                  "SEND SOS:" + dummy_data,
                                   style: new TextStyle(
                                       fontSize: 21.0,
                                       color: const Color(0xFFFFFFFF),
@@ -277,6 +324,7 @@ class _HomeState extends State<Home> {
                                   tts.tellPress("Mute Audio");
                                   _startTimer();
                                   if (goOrNot(1)) {
+                                    timer.cancel();
                                     Navigator.pushNamed(context, '/mute');
                                   }
                                 },
@@ -310,6 +358,7 @@ class _HomeState extends State<Home> {
                                 tts.tellPress("Utilities");
                                 _startTimer();
                                 if (goOrNot(3)) {
+                                  timer.cancel();
                                   Navigator.pushNamed(context, '/utilities');
                                   //   checkInternet();
                                   //   if(!internet)
@@ -375,6 +424,7 @@ class _HomeState extends State<Home> {
                                   tts.tellPress("Initialisation");
                                   _startTimer();
                                   if (goOrNot(2)) {
+                                    timer.cancel();
                                     Navigator.pushNamed(
                                         context, '/initialisation');
                                   }
