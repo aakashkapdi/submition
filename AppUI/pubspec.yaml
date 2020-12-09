@@ -47,7 +47,7 @@ dependencies:
   gallery_saver: ^2.0.1
   wifi_configuration: ^1.2.1
   http: ^0.12.2
-  
+  wifi_iot: ^0.2.0
 
 
 dev_dependencies:

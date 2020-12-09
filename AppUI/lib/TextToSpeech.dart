@@ -10,16 +10,19 @@ class TextToSpeech {
   }
 
   void tellCurrentScreen(String screen) async {
+    await tts.stop();
     setTts();
     await tts.speak("You are on " + screen + "Screen");
   }
 
   void tellPress(String button) async {
+    await tts.stop();
     setTts();
     await tts.speak(button);
   }
 
   void promptInput(String string) async {
+    await tts.stop();
     setTts();
     await tts.speak(string);
   }
@@ -27,6 +30,7 @@ class TextToSpeech {
   void inputPlayback(String string) async {
     var processed = string.split("");
     processed.forEach((element) async {
+      await tts.stop();
       await tts.speak(element);
     });
   }
@@ -126,12 +130,18 @@ class TextToSpeech {
   }
 
   void tellDateTime() async {
+    await tts.stop();
     setTts();
     await tts.speak(_getCombined());
   }
 
   void tell(String content) async {
+    await tts.stop();
     setTts();
     await tts.speak(content);
+  }
+
+  void cancel() async {
+    tts.stop();
   }
 }

@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sms/sms.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'package:ui_trial/cameraHome.dart';
+import 'package:ui_trial/read.dart';
 import 'utilitiesR.dart';
 import 'Size_Config.dart';
 import 'TextToSpeech.dart';
@@ -14,7 +17,7 @@ import 'package:connectivity/connectivity.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
-import 'dart:async';
+import 'package:wifi_iot/wifi_iot.dart';
 
 bool debugShowCheckedModeBanner = true;
 
@@ -37,37 +40,104 @@ class _HomeState extends State<Home> {
   //Integration code start
 
   String data;
-
-  //integration code end
+  Timer timer;
 
   var internet = false;
-  void getdata() async {
-    try {
-      var url = 'http://192.168.43.116/';
+  bool device_connection = false;
+  int count_connection = 0;
+  bool spoke = false;
+  List sensor;
+  String sensor1, sensor2, sensor3, sensor4, sensor5, sensor6, sensor7;
 
-      Timer.periodic(Duration(seconds: 1), (timer) async {
-        var response = await http.get(url);
+  void getdata() async {
+    print("inside try");
+    var url = 'http://192.168.43.116/';
+
+    timer = Timer.periodic(Duration(seconds: 1), (t_imer) async {
+      var response;
+      try {
+        response = await http.get(url);
         if (response.statusCode == 200) {
           data = response.body;
+          count_connection = 0;
+          device_connection = true;
           print(data);
-          // print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" + data);
-          // sensor = data.split(",");
-          // sensor1 = int.parse(sensor[0]);
-          // sensor2 = int.parse(sensor[1]);
-          // sensor3 = int.parse(sensor[2]);
-          // print("sensor1:" + sensor1.toString());
-          // print("sensor2:" + sensor2.toString());
-          // print("sensor3:" + sensor3.toString());
-        } else {
-          data = 'Request failed with status: ${response.statusCode}.';
-          print('Request failed with status: ${response.statusCode}.');
+          sensor = data.split(",");
+          sensor1 = sensor[0];
+          sensor2 = sensor[1];
+          sensor3 = sensor[2];
+          sensor4 = sensor[3];
+          sensor5 = sensor[4];
+          sensor6 = sensor[5];
+          sensor7 = sensor[6];
+          print("sensor1: " + sensor1);
+          print("sensor2: " + sensor2);
+          print("sensor3: " + sensor3);
+          print("sensor4: " + sensor4);
+          print("sensor5: " + sensor5);
+          print("sensor6: " + sensor6);
+          print("sensor7: " + sensor7);
+          //        sensor3 = "SYES";
+          if (sensor3.compareTo("SYES") == 0) {
+            print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>sos activated");
+            timer.cancel();
+            send_SOS();
+          } else if (sensor4.compareTo("NYES") == 0) {
+            timer.cancel();
+            tts.tell("Select the first option from utilities screen");
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => utilities(
+                        jsonFileFace: jsonFileFace, jsonFileSos: jsonFileSos)));
+          } else if (sensor6.compareTo("fYES") == 0) {
+            print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>face activated");
+            timer.cancel();
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => cameraHome(
+                        jsonFileFace: jsonFileFace, jsonFileSos: jsonFileSos)));
+          } else if (sensor5.compareTo("cYES") == 0) {
+            print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>obj activated");
+            timer.cancel();
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => cameraHome(
+                        jsonFileFace: jsonFileFace, jsonFileSos: jsonFileSos)));
+          } else if (sensor7.compareTo("bYES") == 0) {
+            timer.cancel();
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => read()));
+          }
+
+          // else           if (sensor3.compareTo("SYES") == 0)
+          //   print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>sos activated");
+
         }
-        // setState(() {});
-      });
-    } catch (e) {
-      print("Exception found:" + e.toString());
-    }
+      } catch (e1) {
+        print("e1 caught" + e1.toString());
+        device_connection = false;
+        if (response == null && count_connection == 10) {
+          tts.tell("not connected properly to the stick device");
+        }
+        count_connection++;
+        count_connection = count_connection % 11;
+        print(count_connection);
+      }
+    });
   }
+
+  // print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" + data);
+  // sensor = data.split(",");
+  // sensor1 = int.parse(sensor[0]);
+  // sensor2 = int.parse(sensor[1]);
+  // sensor3 = int.parse(sensor[2]);
+  // print("sensor1:" + sensor1.toString());
+  // print("sensor2:" + sensor2.toString());
+  // print("sensor3:" + sensor3.toString());
+  //integration code end
 
   final TextToSpeech tts = new TextToSpeech();
   final SpeechToText speech = SpeechToText();
@@ -102,7 +172,7 @@ class _HomeState extends State<Home> {
 
   void _startTimer() {
     Timer _timer;
-    _timer = Timer.periodic(Duration(seconds: 3), (timer) {
+    _timer = Timer.periodic(Duration(seconds: 3), (t_imer) {
       cancelTouch();
       timer.cancel();
     });
@@ -229,6 +299,36 @@ class _HomeState extends State<Home> {
         });
       });
     }
+    Future.delayed(Duration(seconds: 5), () {
+      getdata();
+    });
+  }
+
+  getPermissions() async {
+    if (await Permission.camera.isUndetermined ||
+        await Permission.camera.isDenied) Permission.camera.request();
+    if (await Permission.location.isUndetermined ||
+        await Permission.location.isDenied) Permission.location.request();
+    if (await Permission.locationAlways.isUndetermined ||
+        await Permission.locationAlways.isDenied)
+      Permission.locationAlways.request();
+    if (await Permission.mediaLibrary.isUndetermined ||
+        await Permission.mediaLibrary.isDenied)
+      Permission.mediaLibrary.request();
+    if (await Permission.microphone.isUndetermined ||
+        await Permission.microphone.isDenied) Permission.microphone.request();
+    if (await Permission.contacts.isUndetermined ||
+        await Permission.contacts.isDenied) Permission.contacts.request();
+    if (await Permission.phone.isUndetermined ||
+        await Permission.phone.isDenied) Permission.phone.request();
+    if (await Permission.photos.isUndetermined ||
+        await Permission.photos.isDenied) Permission.photos.request();
+  }
+
+  @override
+  void dispose() {
+    timer.cancel();
+    super.dispose();
   }
 
   @override
@@ -236,6 +336,8 @@ class _HomeState extends State<Home> {
     checkFileFace();
     checkFileSos();
     checkFileMute();
+    getPermissions();
+    getdata();
     SizeConfig().init(context);
     tts.tellCurrentScreen("Home");
     SystemChrome.setPreferredOrientations([
@@ -251,7 +353,9 @@ class _HomeState extends State<Home> {
           '/initialisation': (context) => Initialisation(
               jsonFileFace: jsonFileFace, jsonFileSos: jsonFileSos),
           '/utilities': (context) =>
-              utilities(jsonFileFace: jsonFileFace, jsonFileSos: jsonFileSos)
+              utilities(jsonFileFace: jsonFileFace, jsonFileSos: jsonFileSos),
+          '/face': (context) =>
+              cameraHome(jsonFileFace: jsonFileFace, jsonFileSos: jsonFileSos)
         },
         title: "home_trial",
         home: Builder(
@@ -283,6 +387,7 @@ class _HomeState extends State<Home> {
                             child: new RaisedButton(
                                 key: null,
                                 onPressed: () {
+                                  timer.cancel();
                                   tts.tellPress("SEND  S O S");
                                   _startTimer();
                                   if (goOrNot(0)) {
@@ -312,6 +417,7 @@ class _HomeState extends State<Home> {
                                   tts.tellPress("Mute Audio");
                                   _startTimer();
                                   if (goOrNot(1)) {
+                                    timer.cancel();
                                     Navigator.pushNamed(context, '/mute');
                                   }
                                 },
@@ -345,6 +451,7 @@ class _HomeState extends State<Home> {
                                 tts.tellPress("Utilities");
                                 _startTimer();
                                 if (goOrNot(3)) {
+                                  timer.cancel();
                                   Navigator.pushNamed(context, '/utilities');
                                   //   checkInternet();
                                   //   if(!internet)
@@ -410,6 +517,7 @@ class _HomeState extends State<Home> {
                                   tts.tellPress("Initialisation");
                                   _startTimer();
                                   if (goOrNot(2)) {
+                                    timer.cancel();
                                     Navigator.pushNamed(
                                         context, '/initialisation');
                                   }
