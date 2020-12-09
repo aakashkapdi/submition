@@ -10,7 +10,7 @@ import 'package:image/image.dart' as imglib;
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 import 'dart:io' as io;
 import 'dart:convert';
-import 'package:flutter_tts/flutter_tts.dart';
+import 'TextToSpeech.dart';
 
 bool debugShowCheckedModeBanner = true;
 
@@ -28,8 +28,8 @@ class _cameraHomeState extends State<cameraHome> {
   io.File jsonFileFace;
   io.File jsonFileSos;
   _cameraHomeState(this.jsonFileFace, this.jsonFileSos);
-  FlutterTts tts = new FlutterTts();
 
+  final TextToSpeech tts = new TextToSpeech();
   bool _isDetecting = false;
   CameraLensDirection _direction = CameraLensDirection.back;
   CameraController _camera;
@@ -52,7 +52,7 @@ class _cameraHomeState extends State<cameraHome> {
     else {
       detectedFaces.insert(detectedFaces.length, s);
       print("inserted at " + detectedFaces.length.toString());
-      tts.speak(s);
+      tts.tell(s);
       Future.delayed(Duration(seconds: 5), () {
         detectedFaces = [];
       });
@@ -84,7 +84,7 @@ class _cameraHomeState extends State<cameraHome> {
 
   String compare(List currEmb) {
     if (data.length == 0) {
-      tts.speak(
+      tts.tell(
           "You Dont Have Any faces saved for performing face recognition. Try Saving Face Images on Initialsation Page");
       return "No Faces Saved";
     }

@@ -161,11 +161,12 @@ class _SaveFacesState extends State<SaveFaces> {
     if (jsonFileFace.existsSync()) {
       Map<String, dynamic> data1 = json.decode(jsonFileFace.readAsStringSync());
       if (data1.isEmpty) {
-        tts.tell(
-            "You Dont Have Any faces saved to perform face recognition. You are on Save Faces Screen.");
+        // tts.tell(
+        //     "Error.")
+        ;
         return Container(
           child: Text(
-            "No faces Saved",
+            "Error",
             style: TextStyle(
                 fontSize: 25.0,
                 color: const Color(0xFF000000),
@@ -216,8 +217,7 @@ class _SaveFacesState extends State<SaveFaces> {
             });
       }
     } else {
-      tts.tell(
-          "You Dont Have Any faces saved to perform face recognition. You are on Save Faces Screen.");
+      // tts.tell("No faces saved");
     }
     return Container(
         child: Center(
@@ -240,13 +240,19 @@ class _SaveFacesState extends State<SaveFaces> {
   // }
 
   @override
+  void dispose() {
+    super.dispose();
+    tts.cancel();
+  }
+
+  @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
-    tts.tellCurrentScreen("Save Faces");
+    // tts.tellCurrentScreen("Save Faces");
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         routes: {
@@ -286,7 +292,8 @@ class _SaveFacesState extends State<SaveFaces> {
                       GestureDetector(
                         onDoubleTap: () {
                           if (_textController.text.isNotEmpty)
-                            tts.promptInput(_textController.text);
+                            //          tts.promptInput(_textController.text)
+                            ;
                         },
                         // child: new TextField(
                         //   controller: _textController,
@@ -315,16 +322,16 @@ class _SaveFacesState extends State<SaveFaces> {
                           child: RaisedButton(
                             key: null,
                             onPressed: () {
-                              tts.tellPress("Choose a face");
+                              //  tts.tellPress("Choose a face");
                               _startTimer();
-                              if (goOrNot(0)) {
-                                if (_textController.text.isEmpty) {
-                                  tts.promptInput("Name cant Be empty");
-                                  return;
-                                } else {
-                                  saveFacesMethod();
-                                }
-                              }
+                              // if (goOrNot(0)) {
+                              //   if (_textController.text.isEmpty) {
+                              //     tts.promptInput("Name cant Be empty");
+                              //     return;
+                              //   } else {
+                              //     saveFacesMethod();
+                              //   }
+                              // }
                             },
                             color: const Color(0xFF266EC0),
                             child: new Text(

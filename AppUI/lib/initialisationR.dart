@@ -82,6 +82,12 @@ class _InitialisationState extends State<Initialisation> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+    tts.cancel();
+  }
+
+  @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
     SystemChrome.setPreferredOrientations([
