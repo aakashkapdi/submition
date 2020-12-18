@@ -36,6 +36,16 @@ class _HomeState extends State<Home> {
   Map<String, dynamic> empty_for_Mute = {};
   _HomeState(this.jsonFileFace, this.jsonFileSos);
 
+  static bool speaking = false;
+
+  void giveSensorOutput(String s) {
+    if (!speaking) {
+      speaking = true;
+      tts.tell(s);
+      speaking = false;
+    }
+  }
+
   //Integration code start
 
   String data;
@@ -46,16 +56,26 @@ class _HomeState extends State<Home> {
   int count_connection = 0;
   bool spoke = false;
   List sensor;
-  String sensor1, sensor2, sensor3, sensor4, sensor5, sensor6, sensor7;
+  String sensor1,
+      sensor2,
+      sensor3,
+      sensor4,
+      sensor5,
+      sensor6,
+      sensor7,
+      sensor8,
+      sensor9,
+      sensor10;
 
   void getdata() async {
     print("inside try");
     var url = 'http://192.168.43.116/';
 
-    timer = Timer.periodic(Duration(seconds: 1), (t_imer) async {
+    timer = Timer.periodic(Duration(seconds: 3), (t_imer) async {
       var response;
       try {
         response = await http.get(url);
+        print("before if " + response.body);
         if (response.statusCode == 200) {
           data = response.body;
           count_connection = 0;
@@ -69,6 +89,9 @@ class _HomeState extends State<Home> {
           sensor5 = sensor[4];
           sensor6 = sensor[5];
           sensor7 = sensor[6];
+          sensor8 = sensor[7];
+          sensor9 = sensor[8];
+          sensor10 = sensor[9];
           print("sensor1: " + sensor1);
           print("sensor2: " + sensor2);
           print("sensor3: " + sensor3);
@@ -76,14 +99,16 @@ class _HomeState extends State<Home> {
           print("sensor5: " + sensor5);
           print("sensor6: " + sensor6);
           print("sensor7: " + sensor7);
-          //        sensor3 = "SYES";
+          print("sensor8: " + sensor8);
+          print("sensor9: " + sensor9);
+          print("sensor10: " + sensor10);
           if (sensor3.compareTo("SYES") == 0) {
             print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>sos activated");
             timer.cancel();
             send_SOS();
           } else if (sensor4.compareTo("NYES") == 0) {
             timer.cancel();
-            tts.tell("Select the first option from utilities screen");
+            giveSensorOutput("Select the first option from utilities screen");
             Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -91,6 +116,7 @@ class _HomeState extends State<Home> {
                         jsonFileFace: jsonFileFace, jsonFileSos: jsonFileSos)));
           } else if (sensor6.compareTo("fYES") == 0) {
             print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>face activated");
+            giveSensorOutput("opening face detection");
             timer.cancel();
             Navigator.push(
                 context,
@@ -109,14 +135,28 @@ class _HomeState extends State<Home> {
             timer.cancel();
             Navigator.push(
                 context, MaterialPageRoute(builder: (context) => read()));
-          } else if (sensor3.compareTo("SYES") == 0)
+          } else if (sensor3.compareTo("SYES") == 0) {
             print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>sos activated");
+            send_SOS();
+          } else if (sensor9.compareTo("elevated") == 0) {
+            giveSensorOutput("elevated surface");
+          } else if (sensor9.compareTo("lowered") == 0) {
+            giveSensorOutput("lowered surface");
+          }
+          // if (sensor1.compareTo("staticc") == 0) {
+          //   giveSensorOutput("overhead static obstacle detected");
+          // } else if (sensor1.compareTo("away") == 0) {
+          //   giveSensorOutput("overhead obstacle moving away");
+          // } else if (sensor1.compareTo("towards") == 0) {
+          //   giveSensorOutput("overhead obstacle moving towards");
+          // }
         }
       } catch (e1) {
-        print("e1 caught" + e1.toString());
+        print("e1 caught:-" + e1.toString() + " {{{{{{{");
         device_connection = false;
         if (response == null && count_connection == 10) {
-          tts.tell("not connected properly to the stick device");
+          tts.tell(
+              "not connected properly to the stick device kindly ensure that your hotspot is connected to the stick");
         }
         count_connection++;
         count_connection = count_connection % 11;
@@ -258,6 +298,7 @@ class _HomeState extends State<Home> {
     checkInternet();
     speech.cancel();
     speech.stop();
+    getdata();
   }
 
   void send_SOS() async {
@@ -325,7 +366,7 @@ class _HomeState extends State<Home> {
     checkFileFace();
     checkFileSos();
     checkFileMute();
-    getPermissions();
+    //  getPermissions();
     getdata();
     SizeConfig().init(context);
     tts.tellCurrentScreen("Home");
@@ -380,12 +421,13 @@ class _HomeState extends State<Home> {
                                   tts.tellPress("SEND  S O S");
                                   _startTimer();
                                   if (goOrNot(0)) {
+                                    timer.cancel();
                                     send_SOS();
                                   }
                                 },
                                 color: const Color(0xFF266EC0),
                                 child: new Text(
-                                  "SEND SOS:",
+                                  "SEND SOS",
                                   style: new TextStyle(
                                       fontSize: 21.0,
                                       color: const Color(0xFFFFFFFF),

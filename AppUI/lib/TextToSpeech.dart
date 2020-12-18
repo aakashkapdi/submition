@@ -144,4 +144,6 @@ class TextToSpeech {
   void cancel() async {
     tts.stop();
   }
+
+  void checkSpeaking() {}
 }
