@@ -11,6 +11,7 @@ import 'package:connectivity/connectivity.dart';
 import 'package:android_intent/android_intent.dart';
 import 'cameraHome.dart';
 import 'objectDetection.dart';
+import 'package:flutter_appavailability/flutter_appavailability.dart';
 
 bool debugShowCheckedModeBanner = true;
 
@@ -212,13 +213,19 @@ class _utilitiesState extends State<utilities> {
                         child: RaisedButton(
                           key: null,
                           onPressed: () {
-                            tts.tellPress("Set Reminders");
+                            tts.tellPress("Currency Detection");
                             _startTimer();
-                            if (goOrNot(1)) {}
+                            if (goOrNot(1)) {
+                              try {
+                                AppAvailability.launchApp('com.rbi.mani');
+                              } catch (e) {
+                                tts.tell("error opening R B I mani app");
+                              }
+                            }
                           },
                           color: const Color(0xFF266EC0),
                           child: new Text(
-                            "REMINDERS",
+                            "Currency Detection",
                             style: new TextStyle(
                                 fontSize: 36.0,
                                 color: const Color(0xFFFFFFFF),
@@ -276,11 +283,7 @@ class _utilitiesState extends State<utilities> {
                               try {
                                 Navigator.pushNamed(
                                     context, '/objectDetection');
-                              } catch (e) {
-                                tts.tell(
-                                    "You Dont have Google Lookout Installed on the Phone. Kindly Install Google lookout.");
-                                print("in catch");
-                              }
+                              } catch (e) {}
                             }
                           },
                           color: const Color(0xFF266EC0),

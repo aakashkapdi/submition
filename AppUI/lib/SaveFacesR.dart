@@ -232,13 +232,6 @@ class _SaveFacesState extends State<SaveFaces> {
     ));
   }
 
-  // void clearFile() {
-  //   var data = {};
-  //   jsonFileFace.writeAsStringSync(json.encode(data));
-  //   tts.tell("File Cleared");
-  //   setState(() {});
-  // }
-
   @override
   void dispose() {
     super.dispose();
@@ -292,25 +285,24 @@ class _SaveFacesState extends State<SaveFaces> {
                       GestureDetector(
                         onDoubleTap: () {
                           if (_textController.text.isNotEmpty)
-                            //          tts.promptInput(_textController.text)
-                            ;
+                            tts.promptInput(_textController.text);
                         },
-                        // child: new TextField(
-                        //   controller: _textController,
-                        //   style: new TextStyle(
-                        //       fontSize: 25.0,
-                        //       color: const Color(0xFF000000),
-                        //       fontWeight: FontWeight.w600,
-                        //       fontFamily: "Roboto"),
-                        //   keyboardType: TextInputType.name,
-                        //   onTap: () {
-                        //     if (_textController.text.isEmpty)
-                        //       tts.promptInput("Enter Name");
-                        //   },
-                        //   onChanged: (value) {
-                        //     tts.inputPlayback(value);
-                        //   },
-                        // ),
+                        child: new TextField(
+                          controller: _textController,
+                          style: new TextStyle(
+                              fontSize: 25.0,
+                              color: const Color(0xFF000000),
+                              fontWeight: FontWeight.w600,
+                              fontFamily: "Roboto"),
+                          keyboardType: TextInputType.name,
+                          onTap: () {
+                            if (_textController.text.isEmpty)
+                              tts.promptInput("Enter Name");
+                          },
+                          onChanged: (value) {
+                            tts.inputPlayback(value);
+                          },
+                        ),
                       ),
                       SizedBox(
                         height: SizeConfig.safeBlockVertical * 2,
@@ -322,16 +314,16 @@ class _SaveFacesState extends State<SaveFaces> {
                           child: RaisedButton(
                             key: null,
                             onPressed: () {
-                              //  tts.tellPress("Choose a face");
+                              tts.tellPress("Choose a face");
                               _startTimer();
-                              // if (goOrNot(0)) {
-                              //   if (_textController.text.isEmpty) {
-                              //     tts.promptInput("Name cant Be empty");
-                              //     return;
-                              //   } else {
-                              //     saveFacesMethod();
-                              //   }
-                              // }
+                              if (goOrNot(0)) {
+                                if (_textController.text.isEmpty) {
+                                  tts.promptInput("Name cant Be empty");
+                                  return;
+                                } else {
+                                  saveFacesMethod();
+                                }
+                              }
                             },
                             color: const Color(0xFF266EC0),
                             child: new Text(

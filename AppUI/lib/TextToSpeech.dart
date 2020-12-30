@@ -1,7 +1,7 @@
-import 'package:flutter_tts/flutter_tts.dart';
+import 'package:flutter_tts_improved/flutter_tts_improved.dart';
 
 class TextToSpeech {
-  final FlutterTts tts = FlutterTts();
+  final FlutterTtsImproved tts = FlutterTtsImproved();
 
   void setTts() async {
     await tts.setLanguage('en-IN');
@@ -136,7 +136,7 @@ class TextToSpeech {
   }
 
   void tell(String content) async {
-    tts.stop();
+    await tts.stop();
     setTts();
     await tts.speak(content);
   }
@@ -144,6 +144,4 @@ class TextToSpeech {
   void cancel() async {
     tts.stop();
   }
-
-  void checkSpeaking() {}
 }

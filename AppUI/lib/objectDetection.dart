@@ -1,14 +1,48 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'dart:io' as io;
 import 'Size_Config.dart';
 import 'homeR.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_tts/flutter_tts.dart';
+import 'TextToSpeech.dart';
 import 'package:camera/camera.dart';
 import 'package:tflite/tflite.dart' as tfl;
 import 'util.dart';
+import 'package:flutter_appavailability/flutter_appavailability.dart';
 
 bool debugShowCheckedModeBanner = true;
+
+var go = [
+  false,
+]; //0:open lookout
+
+bool goOrNot(int touch) {
+  if (go[touch]) {
+    go[touch] = false;
+    return true;
+  } else {
+    for (int i = 0; i < 1; i++) {
+      if (i == touch)
+        go[touch] = true;
+      else
+        go[i] = false;
+    }
+  }
+  return false;
+}
+
+void cancelTouch() {
+  for (int i = 0; i < 1; i++) go[i] = false;
+}
+
+void _startTimer() {
+  Timer _timer;
+  _timer = Timer.periodic(Duration(seconds: 10), (timer) {
+    cancelTouch();
+    timer.cancel();
+  });
+}
 
 class objectDetection extends StatefulWidget {
   io.File jsonFileFace;
@@ -23,7 +57,7 @@ class _objectDetectionState extends State<objectDetection> {
   io.File jsonFileFace;
   io.File jsonFileSos;
   _objectDetectionState(this.jsonFileFace, this.jsonFileSos);
-  FlutterTts tts = new FlutterTts();
+  TextToSpeech tts = new TextToSpeech();
   bool _isDetecting = false;
   CameraLensDirection _direction = CameraLensDirection.back;
   CameraController _camera;
@@ -35,7 +69,7 @@ class _objectDetectionState extends State<objectDetection> {
     else {
       objects.insert(objects.length, s);
       print("inserted at " + objects.length.toString());
-      tts.speak(s);
+      tts.tell(s);
       Future.delayed(Duration(seconds: 5), () {
         objects = [];
       });
@@ -114,6 +148,11 @@ class _objectDetectionState extends State<objectDetection> {
     super.dispose();
   }
 
+  void getapps() async {
+    List<Map<String, String>> apps = await AppAvailability.getInstalledApps();
+    print(apps);
+  }
+
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
@@ -137,10 +176,52 @@ class _objectDetectionState extends State<objectDetection> {
                   title: new Text('Object Detection'),
                   backgroundColor: Color(0xFF1C3BC8),
                 ),
-                body: Container(
-                  height: SizeConfig.safeBlockVertical * 70,
-                  width: SizeConfig.safeBlockHorizontal * 100,
-                  child: _showCamera(),
+                body: Column(
+                  children: <Widget>[
+                    Container(
+                      height: SizeConfig.safeBlockVertical * 59,
+                      width: SizeConfig.safeBlockHorizontal * 100,
+                      child: _showCamera(),
+                    ),
+                    SizedBox(
+                      height: SizeConfig.safeBlockVertical * 3,
+                      width: SizeConfig.safeBlockHorizontal * 100,
+                    ),
+                    Container(
+                      height: SizeConfig.safeBlockVertical * 15,
+                      width: SizeConfig.safeBlockHorizontal * 100,
+                      child: RaisedButton(
+                        key: null,
+                        onPressed: () {
+                          tts.tellPress("Open Google Lookout");
+                          if (goOrNot(0)) {
+                            try {
+                              AppAvailability.launchApp(
+                                  'com.google.android.apps.accessibility.reveal');
+                              getapps();
+                            } catch (e) {
+                              tts.tell("error opening Google Lookout app");
+                            }
+                          }
+                        },
+                        color: const Color(0xFF266EC0),
+                        child: Center(
+                          child: Text(
+                            "Open Lookout by Google",
+                            textAlign: TextAlign.center,
+                            style: new TextStyle(
+                                fontSize: 35.0,
+                                color: const Color(0xFFFFFFFF),
+                                fontWeight: FontWeight.w400,
+                                fontFamily: "Roboto"),
+                          ),
+                        ),
+                        shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(40.0))),
+                      ),
+                    ),
+                  ],
                 ))));
   }
 }

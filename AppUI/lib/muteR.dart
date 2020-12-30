@@ -75,16 +75,36 @@ class _MuteState extends State<Mute> {
     Map<String, dynamic> data = json.decode(jsonFileMute.readAsStringSync());
     switch (service) {
       case 0:
-        data['obstacle'] = false;
+        if (data['obstacle'] == false) {
+          tts.tell("obstacle detection muted already");
+        } else {
+          data['obstacle'] = false;
+          tts.tell("obstacle detection muted");
+        }
         break;
       case 1:
-        data['elevated'] = false;
+        if (data['elevated'] == false) {
+          tts.tell("elevated surface detection muted already");
+        } else {
+          data['elevated'] = false;
+          tts.tell("elevated surface detection muted");
+        }
         break;
       case 2:
-        data['lowered'] = false;
+        if (data['lowered'] == false) {
+          tts.tell("lowered surface detection muted already");
+        } else {
+          data['lowered'] = false;
+          tts.tell("lowered surface detection muted");
+        }
         break;
       case 3:
-        data['wet'] = false;
+        if (data['wet'] == false) {
+          tts.tell("wet surface detection false already");
+        } else {
+          data['wet'] = false;
+          tts.tell("wet surface detection muted");
+        }
         break;
     }
     jsonFileMute.writeAsStringSync(json.encode(data));
@@ -108,12 +128,12 @@ class _MuteState extends State<Mute> {
     data['wet'] = true;
     jsonFileMute.writeAsStringSync(json.encode(data));
     print(data.toString());
+    tts.tell("unmuted audio outputs");
   }
 
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
-    mute(0);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,

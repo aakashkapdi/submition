@@ -17,6 +17,7 @@ import 'package:connectivity/connectivity.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_tts_improved/flutter_tts_improved.dart';
 
 bool debugShowCheckedModeBanner = true;
 
@@ -36,16 +37,6 @@ class _HomeState extends State<Home> {
   Map<String, dynamic> empty_for_Mute = {};
   _HomeState(this.jsonFileFace, this.jsonFileSos);
 
-  static bool speaking = false;
-
-  void giveSensorOutput(String s) {
-    if (!speaking) {
-      speaking = true;
-      tts.tell(s);
-      speaking = false;
-    }
-  }
-
   //Integration code start
 
   String data;
@@ -55,6 +46,8 @@ class _HomeState extends State<Home> {
   bool device_connection = false;
   int count_connection = 0;
   bool spoke = false;
+  final FlutterTtsImproved ttsi = FlutterTtsImproved();
+  dynamic telling;
   List sensor;
   String sensor1,
       sensor2,
@@ -71,92 +64,167 @@ class _HomeState extends State<Home> {
     print("inside try");
     var url = 'http://192.168.43.116/';
 
-    timer = Timer.periodic(Duration(seconds: 3), (t_imer) async {
+    timer = Timer.periodic(Duration(seconds: 1), (t_imer) async {
       var response;
+      Map<String, dynamic> mute_data;
+      dynamic mute_elevated, mute_lowered, mute_obstacle, mute_wet;
+      try {
+        io.Directory tempDir = await getApplicationDocumentsDirectory();
+        String _mutePath = tempDir.path + '/mute.json';
+        if (await io.File(_mutePath).exists()) {
+          print("Mute file Exists");
+          jsonFileMute = io.File(_mutePath);
+          mute_data = json.decode(jsonFileMute.readAsStringSync());
+          mute_elevated = mute_data['elevated'];
+          mute_lowered = mute_data['lowered'];
+          mute_obstacle = mute_data['obstacle'];
+          mute_wet = mute_data['wet'];
+          print("elevated:" +
+              mute_elevated.toString() +
+              "  lowered:" +
+              mute_lowered.toString() +
+              "  obstacle:" +
+              mute_obstacle.toString() +
+              "  wet:" +
+              mute_wet.toString());
+        }
+      } catch (e) {
+        print("mute file exception:" + e.toString());
+      }
       try {
         response = await http.get(url);
-        print("before if " + response.body);
-        if (response.statusCode == 200) {
-          data = response.body;
-          count_connection = 0;
-          device_connection = true;
-          print(data);
-          sensor = data.split(",");
-          sensor1 = sensor[0];
-          sensor2 = sensor[1];
-          sensor3 = sensor[2];
-          sensor4 = sensor[3];
-          sensor5 = sensor[4];
-          sensor6 = sensor[5];
-          sensor7 = sensor[6];
-          sensor8 = sensor[7];
-          sensor9 = sensor[8];
-          sensor10 = sensor[9];
-          print("sensor1: " + sensor1);
-          print("sensor2: " + sensor2);
-          print("sensor3: " + sensor3);
-          print("sensor4: " + sensor4);
-          print("sensor5: " + sensor5);
-          print("sensor6: " + sensor6);
-          print("sensor7: " + sensor7);
-          print("sensor8: " + sensor8);
-          print("sensor9: " + sensor9);
-          print("sensor10: " + sensor10);
-          if (sensor3.compareTo("SYES") == 0) {
-            print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>sos activated");
-            timer.cancel();
-            send_SOS();
-          } else if (sensor4.compareTo("NYES") == 0) {
-            timer.cancel();
-            giveSensorOutput("Select the first option from utilities screen");
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => utilities(
-                        jsonFileFace: jsonFileFace, jsonFileSos: jsonFileSos)));
-          } else if (sensor6.compareTo("fYES") == 0) {
-            print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>face activated");
-            giveSensorOutput("opening face detection");
-            timer.cancel();
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => cameraHome(
-                        jsonFileFace: jsonFileFace, jsonFileSos: jsonFileSos)));
-          } else if (sensor5.compareTo("cYES") == 0) {
-            print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>obj activated");
-            timer.cancel();
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => cameraHome(
-                        jsonFileFace: jsonFileFace, jsonFileSos: jsonFileSos)));
-          } else if (sensor7.compareTo("bYES") == 0) {
-            timer.cancel();
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => read()));
-          } else if (sensor3.compareTo("SYES") == 0) {
-            print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>sos activated");
-            send_SOS();
-          } else if (sensor9.compareTo("elevated") == 0) {
-            giveSensorOutput("elevated surface");
-          } else if (sensor9.compareTo("lowered") == 0) {
-            giveSensorOutput("lowered surface");
+        if (response == "") {
+          print("null");
+        } else {
+          if (response.statusCode == 200) {
+            data = response.body;
+            count_connection = 0;
+            device_connection = true;
+            print("data:" + data);
+            sensor = data.split(",");
+            sensor1 = sensor[0]; //overhead
+            sensor2 = sensor[1]; //waist level;
+            sensor3 = sensor[2]; //elevated or lowered
+            sensor4 = sensor[3]; //button1  SOS
+            sensor5 = sensor[4]; //button2  NAVIGATION
+            sensor6 = sensor[5]; //button3  CAMERA
+            sensor7 = sensor[6]; //button4  FACE
+            sensor8 = sensor[7]; //button5  READ
+            sensor9 = sensor[8]; //orientation
+            sensor10 = sensor[9]; //water
+            print("sensor1: " + sensor1);
+            print("sensor2: " + sensor2);
+            print("sensor3: " + sensor3);
+            print("sensor4: " + sensor4);
+            print("sensor5: " + sensor5);
+            print("sensor6: " + sensor6);
+            print("sensor7: " + sensor7);
+            print("sensor8: " + sensor8);
+            print("sensor9: " + sensor9);
+            print("sensor10: " + sensor10);
+
+            if (sensor4.compareTo("SYES") == 0) {
+              send_SOS();
+            } else {
+              if (sensor5.compareTo("NYES") == 0) {
+                telling = await ttsi
+                    .speak("Select the first option from utilities screen");
+              } else {
+                if (sensor8.compareTo("fYES") == 0) {
+                  io.sleep(Duration(seconds: 4));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => utilities(
+                              jsonFileFace: jsonFileFace,
+                              jsonFileSos: jsonFileSos)));
+                } else {
+                  if (sensor6.compareTo("cYES") == 0) {
+                    telling = await ttsi.speak("opening face detection");
+                    io.sleep(Duration(seconds: 3));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => cameraHome(
+                                jsonFileFace: jsonFileFace,
+                                jsonFileSos: jsonFileSos)));
+                  } else {
+                    if (sensor7.compareTo("bYES") == 0) {
+                      telling =
+                          await ttsi.speak("opening camera in reading mode");
+                      io.sleep(Duration(seconds: 3));
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (context) => read()));
+                    } else {
+                      if (sensor3.compareTo("lowered") == 0 &&
+                          mute_lowered == true) {
+                        print("____________" + telling.toString());
+                        telling = await ttsi.speak("lowered surface");
+                        print("___________++++++++_" + telling.toString());
+                        io.sleep(Duration(seconds: 2));
+                      } else {
+                        if (sensor3.compareTo("elevated") == 0 &&
+                            mute_elevated == true) {
+                          telling = await ttsi.speak("elevated surface.");
+                          io.sleep(Duration(seconds: 2));
+                        } else {
+                          if (sensor1.compareTo("static_head") == 0 &&
+                              mute_obstacle == true) {
+                            telling = await ttsi.speak("static obstacle");
+                            io.sleep(Duration(seconds: 3));
+                          } else {
+                            if (sensor1.compareTo("away_head") == 0 &&
+                                mute_obstacle == true) {
+                              telling = await ttsi.speak("obstacle going away");
+                              io.sleep(Duration(seconds: 3));
+                            } else {
+                              if (sensor1.compareTo("towards_head") == 0 &&
+                                  mute_obstacle == true) {
+                                telling =
+                                    await ttsi.speak("obstacle approaching");
+                                io.sleep(Duration(seconds: 3));
+                              } else {
+                                if (sensor2.compareTo("static_waist") == 0 &&
+                                    mute_obstacle == true) {
+                                  telling = await ttsi.speak("static obstacle");
+                                  io.sleep(Duration(seconds: 3));
+                                } else {
+                                  if (sensor2.compareTo("away_waist") == 0 &&
+                                      mute_obstacle == true) {
+                                    telling =
+                                        await ttsi.speak("obstacle going away");
+                                    io.sleep(Duration(seconds: 3));
+                                  } else {
+                                    if (sensor2.compareTo("towards_waist") ==
+                                            0 &&
+                                        mute_obstacle == true) {
+                                      print(
+                                          "____________" + telling.toString());
+                                      telling = await ttsi
+                                          .speak("obstacle approaching");
+                                      print("___________++++++++_" +
+                                          telling.toString());
+                                      io.sleep(Duration(seconds: 3));
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
-          // if (sensor1.compareTo("staticc") == 0) {
-          //   giveSensorOutput("overhead static obstacle detected");
-          // } else if (sensor1.compareTo("away") == 0) {
-          //   giveSensorOutput("overhead obstacle moving away");
-          // } else if (sensor1.compareTo("towards") == 0) {
-          //   giveSensorOutput("overhead obstacle moving towards");
-          // }
         }
       } catch (e1) {
-        print("e1 caught:-" + e1.toString() + " {{{{{{{");
+        print("e1 caught" + e1.toString());
         device_connection = false;
         if (response == null && count_connection == 10) {
-          tts.tell(
-              "not connected properly to the stick device kindly ensure that your hotspot is connected to the stick");
+          tts.tell("not connected properly to the stick device");
         }
         count_connection++;
         count_connection = count_connection % 11;
@@ -298,7 +366,6 @@ class _HomeState extends State<Home> {
     checkInternet();
     speech.cancel();
     speech.stop();
-    getdata();
   }
 
   void send_SOS() async {
@@ -332,29 +399,6 @@ class _HomeState extends State<Home> {
     });
   }
 
-  getPermissions() async {
-    if (await Permission.camera.isUndetermined ||
-        await Permission.camera.isDenied) Permission.camera.request();
-    if (await Permission.location.isUndetermined ||
-        await Permission.location.isDenied) Permission.location.request();
-    if (await Permission.locationAlways.isUndetermined ||
-        await Permission.locationAlways.isDenied)
-      Permission.locationAlways.request();
-    if (await Permission.mediaLibrary.isUndetermined ||
-        await Permission.mediaLibrary.isDenied)
-      Permission.mediaLibrary.request();
-    if (await Permission.microphone.isUndetermined ||
-        await Permission.microphone.isDenied) Permission.microphone.request();
-    if (await Permission.contacts.isUndetermined ||
-        await Permission.contacts.isDenied) Permission.contacts.request();
-    if (await Permission.phone.isUndetermined ||
-        await Permission.phone.isDenied) Permission.phone.request();
-    if (await Permission.photos.isUndetermined ||
-        await Permission.photos.isDenied) Permission.photos.request();
-  }
-
-  /* Integration code*/
-
   @override
   void dispose() {
     timer.cancel();
@@ -366,7 +410,6 @@ class _HomeState extends State<Home> {
     checkFileFace();
     checkFileSos();
     checkFileMute();
-    //  getPermissions();
     getdata();
     SizeConfig().init(context);
     tts.tellCurrentScreen("Home");
@@ -421,7 +464,6 @@ class _HomeState extends State<Home> {
                                   tts.tellPress("SEND  S O S");
                                   _startTimer();
                                   if (goOrNot(0)) {
-                                    timer.cancel();
                                     send_SOS();
                                   }
                                 },
